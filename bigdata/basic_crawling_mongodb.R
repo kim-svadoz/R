@@ -2,6 +2,12 @@ install.packages("mongolite")
 library("stringr")
 library("mongolite")
 
+#mongodb에 저장하기 위해서는 크롤링해야 한다.
+con <- mongo(collection = "crawl",
+             db="bigdata",
+             url="mongodb://127.0.0.1")
+
+
 url <- "https://www.clien.net/service/group/community"
 url_data <- readLines(url, encoding = "UTF-8")
 url_data
@@ -11,7 +17,7 @@ url_data
 #head(url_data)
 #tail(url_data)
 
-url_data[205]
+url_data[705]
 ##### 조건에 만족하는 데이터를 필터링 #####
 #문자열에 패턴을 적용해서 일치여부를 T/F로 리턴
 
@@ -45,5 +51,22 @@ url_value
 final_data <- cbind(title,hit,url_value)
 final_data
 write.csv(final_data, "crawl_data.csv")
+save(final_data, file="crawl_data.RData")
 length(title)
 length(hit)
+length(url_value)
+
+#### mongodb에 저장하기 ####
+if(con$count() > 0){
+  con$drop()
+}
+class(final_data) 
+## 현재 final_data가 matrix타입이라 mongodb에 저장할수가 없다.
+## mongodb에 데이터를 저장하기 위해서 dataframe으로 변환하기
+final_data <- data.frame(final_data)
+class(final_data)
+con$insert(final_data)
+
+
+
+
